@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Toyama:{{ user.username }}</title>
+<link rel='stylesheet' href='{% static "toyama/stylesheets/style.css" %}'/>
+<script src='{% static "toyama/javascripts/d3.js" %}'></script>
+<script src='{% static "toyama/javascripts/imat.webapp.js" %}'></script>
+</head>
+<style>
+table.mylist {
+	border-collapse: collapse;
+	font-family: "Roboto", "Lucida Grande", Verdana, Arial, sans-serif;
+	font-size: 14px;
+	text-align: left;
+	line-height: 1.5;
+	width: 100%;
+	border-top: 1px solid #ccc;
+	border-bottom: 1px solid #ccc;
+}
+table.mylist thead th {
+	padding: 8px;
+	font-weight: bold;
+	vertical-align: top;
+	color: #fff;
+	background: #79aec8;
+}
+table.mylist td {
+	padding: 5px;
+	vertical-align: middle;
+}
+table.mylist tr:nth-child(even) {
+	background: #f3f6f7;
+}
+</style>
+<body>
+<div class="page">
+	<div id="app" />
+	<table class="mylist">
+		<thead>
+			<tr>
+				<th>議員名</th><th>番号</th><th>日時</th><th>使途</th><th>額面</th><th>率</th><th>文書</th><th style="width:200px;">宛名</th><th>画像ID</th><th>担当者</th>
+			</tr>
+		</thead>
+		<tbody>
+{% for docinfo in docinfos %}
+			<tr>
+				<td>{{ docinfo.rep_name }}</td>
+				<td>{{ docinfo.doc_number }}</td>
+				<td>{{ docinfo.date_of_issue }}</td>
+				<td>{{ docinfo.usage_type }}</td>
+				<td>{{ docinfo.price }}</td>
+				<td>{{ docinfo.rate }}</td>
+				<td>{{ docinfo.ref_image_id }}</td>
+				<td><img height="30px" src="{{ docinfo.cap_image_base64 }}" /></td>
+				<td>{{ docinfo.ref_image_id }}</td>
+				<td>{{ docinfo.owner.username }}</td>
+			</tr>
+{% endfor %}
+		</tbody>
+	</table>
+</div><!--============ end of page ==============-->
+<div id="webapp_top_fixed">
+  <div class="webapp_inner_fixed">
+    <div class="webapp_left_holder">
+      <ul class="webapp_menu_list">
+        <li><h3 id="title">Documents processed by {{ user.username }}</h3></li>
+      </ul>
+    </div>
+    <div class="webapp_right_holder">
+      <ul class="webapp_menu_list">
+        <li class="extensible">
+          <img id="sync" src='{% static "toyama/images/menu50.png" %}' width="25px" height="25px" style="float:left;margin:5px 5px;" />
+          <ul>
+            <li>
+              <a href="./">Resume</a>
+            </li>
+            <li>
+              <a href="../accounts/logout">Logout</a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div>{% csrf_token %}</div>
+</body>
+<script>
+window.onload = function(){
+	imat.webapp.initMenu();
+}
+</script>
+</html>

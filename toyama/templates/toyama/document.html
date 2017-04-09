@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Toyama:{{ user.username }}</title>
+<link rel='stylesheet' href='{% static "toyama/stylesheets/style.css" %}'/>
+<link rel='stylesheet' href='{% static "toyama/stylesheets/jquery-ui.css" %}'/>
+<script src='{% static "toyama/javascripts/jquery-3.1.1.js" %}'></script>
+<script src='{% static "toyama/javascripts/jquery-ui.min.js" %}'></script>
+<script src='{% static "toyama/javascripts/underscore.js" %}'></script>
+<script src='{% static "toyama/javascripts/backbone.js" %}'></script>
+<script src='{% static "toyama/javascripts/d3.js" %}'></script>
+<script src='{% static "toyama/javascripts/imat.webapp.js" %}'></script>
+</head>
+<style>
+input[type="text"], textarea {
+	outline: none;
+	border: 1px solid #aaa;
+	-webkit-transition: all .3s;
+	transition: all .3s;
+}
+input[type="text"]:focus, textarea:focus {
+	box-shadow: 0 0 7px #1abc9c;
+	border: 1px solid #1abc9c;
+}
+#app {
+	position: relative;
+}
+.info{
+	position: absolute;
+	z-index:99;
+}
+.deactivated{
+	opacity:0.5;
+	z-index:1;
+}
+.deactivated button{
+	display:none;
+}
+.item_main {
+	position: absolute;
+	width: 300px;
+	background-color: white;
+	font-size:16px;
+	box-shadow:3px 3px 6px 3px #888;
+}
+.item_main h4{
+	font-family: sans-serif;
+	font-size:12px;
+	margin:2px 10px;
+}
+.item_main button{
+	float:right;
+	font-size:11px;
+	margin:0px 5px;
+	padding: 1px 5px;
+}
+.item_table{
+	position: relative;
+	width: 90%;
+	margin: 5px auto;
+}
+.item_line input[type="text"]{
+	width: 100%
+}
+.item{
+	width:60px;
+}
+.edit_text{
+	width:100%;
+}
+.edit_num{
+	width:100%;	
+}
+.filename{
+	font-size: 12px;
+}
+.prev rect, .next rect, .back rect{
+	fill:white; stroke:black;
+}
+.prev text, .next text, .back text{
+	font-size:18px; 
+	fill:black;
+	text-anchor: middle;
+}
+</style>
+<body>
+<div class="page">
+	<div id="app" />
+</div><!--============ end of page ==============-->
+<div id="webapp_top_fixed">
+  <div class="webapp_inner_fixed">
+    <div class="webapp_left_holder">
+      <ul class="webapp_menu_list">
+        <li><h3 id="title">Document:<span id="doc_id"></span></h3></li>
+        <li><button id="checkInfo">チェック</button></li>
+      </ul>
+    </div>
+    <div class="webapp_right_holder">
+      <ul class="webapp_menu_list">
+        <li><button id="addInfo">項目追加</button></li>
+        <li class="extensible">
+          <img id="sync" src='{% static "toyama/images/menu50.png" %}' width="25px" height="25px" style="float:left;margin:5px 5px;" />
+          <ul>
+            <li><a href="mylist">my list</a></li>
+{% if user.is_staff %}
+            <li><a href="alllist">full list</a></li>
+{% endif %}
+            <li>
+              <a href="../accounts/logout">Logout</a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<!-- Templates -->
+<script type="text/template" id="item-template">
+  <div class="item_main">
+    <div>
+      <h4>政務調査費項目(<%- ref_image_id %>)
+        <button data-tabindex="9" class="bt_delete">削除</button>
+        <button data-tabindex="10" class="bt_save">保存</button>
+      </h4>
+    </div>
+    <table class="item_table">
+      <tbody>
+        <tr>
+          <td>議員名:</td>
+          <td colspan="2">
+            <input data-tabindex="1" class="edit_text" data-field="rep_name" type="text" value="<%- rep_name %>" />
+          </td>
+        </tr>
+        <tr>
+          <td>整理番号:</td>
+          <td colspan="2">
+            <input data-tabindex="2" class="edit_text" data-field="doc_number" type="text" value="<%- doc_number %>" />
+          </td>
+        </tr>
+        <tr>
+          <td>種別:</td>
+          <td colspan="2">
+          	<select data-tabindex="3" class="select_option" data-field="usage_type">
+			  <option value="" <%= usage_type=="" ? "selected" : "" %>></option>
+			  <option value="調査研究費" <%= usage_type=="調査研究費" ? "selected" : "" %>>調査研究費</option>
+			  <option value="研修費" <%= usage_type=="研修費" ? "selected" : "" %>>研修費</option>
+			  <option value="広報広聴費" <%= usage_type=="広報広聴費" ? "selected" : "" %>>広報広聴費</option>
+			  <option value="要請陳情" <%= usage_type=="要請陳情" ? "selected" : "" %>>要請陳情</option>
+			  <option value="会議費" <%= usage_type=="会議費" ? "selected" : "" %>>会議費</option>
+			  <option value="資料作成費" <%= usage_type=="資料作成費" ? "selected" : "" %>>資料作成費</option>
+			  <option value="資料購入費" <%= usage_type=="資料購入費" ? "selected" : "" %>>資料購入費</option>
+			  <option value="事務所費" <%= usage_type=="事務所費" ? "selected" : "" %>>事務所費</option>
+			  <option value="事務費" <%= usage_type=="事務費" ? "selected" : "" %>>事務費</option>
+			  <option value="人件費" <%= usage_type=="人件費" ? "selected" : "" %>>人件費</option>
+          	</select>
+          </td>
+        </tr>
+        <tr>
+          <td>使途:</td>
+          <td colspan="2">
+            <input data-tabindex="4" class="edit_text" data-field="usage" type="text" value="<%- usage %>" />
+          </td>
+        </tr>
+        <tr>
+          <td>発行日:</td>
+          <td colspan="2">
+            <input data-tabindex="5" class="edit_text" data-field="date_of_issue" type="date" value="<%- date_of_issue %>" />
+          </td>
+        </tr>
+        <tr>
+          <td>額面:</td>
+          <td colspan="2">
+            <input data-tabindex="6" class="edit_num" data-field="price" type="number" min="0" step="1" value="<%- price %>" />
+          </td>
+        </tr>
+        <tr>
+          <td>按分(%)</td>
+          <td colspan="2">
+            <input data-tabindex="7" class="edit_num" data-field="rate" type="number" min="0" max="100" step="1" value="<%- rate %>" />
+          </td>
+        </tr>
+        <tr>
+          <td>メモ:</td>
+          <td colspan="2">
+            <input data-tabindex="8" class="edit_text" data-field="memo" type="text" value="<%- memo %>" />
+          </td>
+        </tr>
+        <tr>
+          <td>宛名画像ID:</td>
+          <td class="filename cap_image_id"><%- cap_image_id %></td>
+          <td>
+            <select class="select_option" data-field="cap_direction">
+              <option value="上" <%= cap_direction=="上" ? "selected" : "" %> >上</option>
+              <option value="右" <%= cap_direction=="右" ? "selected" : "" %> >右</option>
+              <option value="左" <%= cap_direction=="左" ? "selected" : "" %> >左</option>
+              <option value="下" <%= cap_direction=="下" ? "selected" : "" %> >下</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3"><img height="<%- cap_height %>" width="<%- cap_width %>" src="<%- cap_image_base64 %>" /></td>
+        </tr>
+        <tr>
+          <td>範囲:</td>
+          <td colspan="2"><%- cap_range_text %></td>
+        </tr>        
+      </tbody>
+    </table>
+  </div>
+</script>
+<div>{% csrf_token %}</div>
+</body>
+<script src='{% static "toyama/javascripts/documents.js" %}'></script>
+</html>
